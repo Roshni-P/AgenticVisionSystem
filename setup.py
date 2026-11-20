@@ -1,0 +1,50 @@
+import os
+import sys
+import glob
+from setuptools import setup
+from pybind11.setup_helpers import Pybind11Extension, build_ext
+
+# Detect active Conda environment path dynamically
+conda_prefix = os.environ.get("CONDA_PREFIX", sys.prefix)
+conda_lib = os.path.join(conda_prefix, "lib")
+conda_include = os.path.join(conda_prefix, "include")
+
+# Include directories for OpenCV and ONNX Runtime
+include_dirs = [
+    "include",
+    conda_include,
+    os.path.join(conda_include, "opencv4"),
+    os.path.join(conda_include, "opencv4", "opencv2"),
+    # Standard Conda ONNX Runtime header directory
+    os.path.join(conda_include, "onnxruntime"),
+    # Some conda distributions place headers directly or inside core/session
+    os.path.join(conda_include, "onnxruntime", "core", "session"),
+]
+
+# Shared library search path
+library_dirs = [
+    conda_lib,
+]
+
+# Libraries to link against (.so files)
+libraries = [
+    # OpenCV binariesopencv
+    "opencv_core",
+    "opencv_imgproc",
+    "opencv_dnn",
+    "opencv_imgcodecs",
+    "opencv_videoio",
+    "opencv_highgui",
+    # ONNX Runtime binary (links libonnxruntime.so)
+    "onnxruntime",
+]
+
+# Compiler & Linker Flags
+extra_compile_args = ["-O3", "-std=c++17", "-fPIC"]
+extra_link_args = [
+    f"-Wl,-rpath,{conda_lib}",
+    "-Wl,-rpath,$ORIGIN",
+]
+
+sources = glob.glob("src/*.cpp")
+
